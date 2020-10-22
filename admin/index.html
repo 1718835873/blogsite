@@ -1,0 +1,292 @@
+<!--
+ * @Descripttion: 
+ * @version: 
+ * @Author: sueRimn
+ * @Date: 2020-10-10 19:44:05
+ * @LastEditors: sueRimn
+ * @LastEditTime: 2020-10-17 12:20:12
+-->
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>首页</title>
+    <link rel="stylesheet" href="./css/bootstrap.css">
+    <style>
+        .main{
+            margin-top: 60px;
+        }
+        td{
+            vertical-align: middle !important;
+        }
+        .set-img{
+            width: 70px;
+            height: 70px;
+            border-radius: 50%;
+            display: inline
+        }
+    </style>
+</head>
+<body>
+    
+    <div id="index">
+        <nav class="navbar navbar-default navbar-fixed-top" role="navigation">
+            <div class="container">
+                <ul class="nav navbar-nav">
+                    <li :class="active==1?'active':''" @click="active=1">
+                        <a href="#">用户列表</a>
+                    </li>
+                    <li :class="active==2?'active':''" @click="active=2">
+                        <a href="#">博客列表</a>
+                    </li>
+                    
+                </ul>
+                <p class="navbar-text navbar-right">欢迎，{{adminInfo.userName}}</p>
+            </div>
+        </nav>
+        <div class="main">
+            <div class="container"> 
+                <table class="table table-bordered table-hover" v-show="active==1">
+                    <thead>
+                        <tr>
+                            <th class="text-center">#</th>
+                            <th class="text-center">用户头像</th>
+                            <th class="text-center">用户昵称</th>
+                            <th class="text-center">注册时间</th>
+                            <th class="text-center">操作</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        <tr v-for="(item,index) in userLists">
+                            <td class="text-center">{{index+1}}</td>
+                            <td class="text-center">
+                            <img :src="item.avatar?item.avatar:avatar" class="img-responsive set-img" alt="Image">
+                            </td>
+                            <td class="text-center">{{item.userName}}</td>
+                            <td class="text-center">{{item.createTime|formdateTime}}</td>
+                            <td class="text-center" v-if="item.userId !=adminInfo.userId"><a href="#" @click.stop="del(item.userId)">删除</a></td>
+                            <td class="text-center"  v-else>管理员</td>
+                        </tr>
+                        <tr>
+                            <td colspan="5" class="text-center">
+                                <nav aria-label="Page navigation">
+                                    <ul class="pagination">
+                                        <li>
+                                            <a href="#" aria-label="Previous" @click="pre">
+                                                <span aria-hidden="true">&laquo;</span>
+                                            </a>
+                                        </li>
+                                        <li v-for="item in usertotalNum"><a href="#" @click="goPage(item)">{{item}}</a></li>
+                                        <li>
+                                            <a href="#" aria-label="Next" @click="next">
+                                                <span aria-hidden="true">&raquo;</span>
+                                            </a>
+                                        </li>
+                                    </ul>
+                                </nav>
+                            </td>
+                        </tr>
+                    </tbody>
+                </table>
+                
+                
+            </div>
+            <div class="container">
+                <table class="table table-bordered table-hover" v-show="active==2">
+                    <thead>
+                        <tr>
+                            <th class="text-center">#</th>
+                            <th class="text-center">博客标题</th>
+                            <th class="text-center">博客内容节选</th>
+                            <th class="text-center">博主</th>
+                            <th class="text-center">发布时间</th>
+                            <th class="text-center">操作</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        <tr v-for="(item1,index1) in blogLists">
+                            <td class="text-center">{{index1+1}}</td>
+                            <td class="text-left">{{item1.blogName}}</td>
+                            <td class="text-left" v-html="item1.blogTxt"></td>
+                            <td class="text-center">{{item1.userName}}</td>
+                            <td class="text-center">{{item1.publishTime|formdateTime}}</td>
+                            <td class="text-center"><a href="" @click="delBlog(item1.blogId)">删除</a></td>
+                        </tr>
+                        <tr>
+                            <td colspan="6" class="text-center">
+                                <nav aria-label="Page navigation">
+                                    <ul class="pagination">
+                                        <li>
+                                            <a href="#" aria-label="Previous">
+                                                <span aria-hidden="true">&laquo;</span>
+                                            </a>
+                                        </li>
+                                        <li v-for="item in blogTotalNum"><a href="#" @click="goBlogPage(item)">{{item}}</a></li>
+                                        <li>
+                                            <a href="#" aria-label="Next">
+                                                <span aria-hidden="true">&raquo;</span>
+                                            </a>
+                                        </li>
+                                    </ul>
+                                </nav>
+                            </td>
+                        </tr>
+                    </tbody>
+                </table>
+            
+            
+            </div>
+        </div>
+    </div>
+
+
+    <script src="./js/jQuery.min.js"></script>
+    <script src="./js/bootstrap.js"></script>
+    <script src="./js/vue.js"></script>
+    <script>
+        const vm = new Vue({
+            el: "#index",
+            data: {
+                active:1,
+                adminInfo:{},//管理员信息
+                userLists:[],
+                blogLists:[],
+                limit:5,
+                page:1,
+                usertotalNum:1,
+                blogTotalNum:1,
+                avatar:"./images/avatar.png"
+                
+            },
+            filters:{
+                formdateTime(value){
+                    var date=new Date(value*1000)
+                    var year=date.getFullYear();
+                    var month=(date.getMonth() + 1)>9? (date.getMonth() + 1):"0"+ (date.getMonth() + 1)
+                    var day=date.getDate();
+                    var hour=date.getHours();
+                    var minutes=date.getMinutes();
+                    var seconds=date.getSeconds()
+                    return `${year}-${month}-${day} ${hour}:${minutes}:${seconds}`
+                }
+            },
+            mounted() {
+                this.getUserLists(this.page,this.limit)
+                this.getBlogLists(this.page,this.limit)
+                this.adminInfo=JSON.parse(sessionStorage.getItem("adminInfo"))
+            },
+            methods: {
+                // 上一页
+                pre(){
+                    // this.page--
+                    if(this.page==1){
+                        alert("已经是首页了")
+                    }else{
+                        this.page--;
+                        this.getUserLists(this.page, this.limit)
+                    }
+                },
+                // 下一页
+                next(){
+                    if (this.page == this.usertotalNum) {
+                        alert("已经是尾页了")
+                    } else {
+                        this.page++;
+                        this.getUserLists(this.page, this.limit)
+                    }
+                },
+                // 去页码所在的页面
+                goPage(page){
+                    this.getUserLists(page,this.limit)
+                },
+                goBlogPage(page){
+                    this.getBlogLists(page, this.limit)
+                },
+                // 删除用户
+                del(userId){
+                    console.log(userId)
+                    var that=this
+                    $.ajax({
+                        url:"http://localhost:3000/delUser",
+                        type:"GET",
+                        data:{userId},
+                        success:res=>{
+                            console.log(res)
+                            if(res.code==1){
+                                alert(res.msg)
+
+                            }else{
+                                console.log(res.msg)
+                                console.log("失败")
+                            }
+                            that.getUserLists(this.page, this.limit)
+
+                        },
+                        error:err=>{
+                            console.log("删除用户操作失败")
+                        }
+                    })
+                },
+                
+                // 删除博客
+                delBlog(blogId){
+                    $.ajax({
+                        url: "http://localhost:3000/delBlog",
+                        type: "GET",
+                        data: { blogId },
+                        success: res => {
+                            console.log(res)
+                            if (res.code == 1) {
+                                alert(res.msg)
+
+                            } else {
+                                console.log(res.msg)
+                                console.log("失败")
+                            }
+                            that.getBlogLists(this.page, this.limit)
+
+                        },
+                        error: err => {
+                            console.log("删除博客操作失败")
+                        }
+                    })
+                },
+                // 获取用户列表
+                getUserLists(page,limit){
+                    $.ajax({
+                        url:"http://localhost:3000/getUserLists",
+                        type:"GET",
+                        data:{page,limit},
+                        success:res=>{
+                            console.log(res)
+                            this.usertotalNum=Math.ceil(res.data.total / limit)
+                            this.page=res.data.page
+                            this.userLists=res.data.data
+                        },
+                        error:err=>{
+                            console.log(err)
+                        }
+                    })
+                },
+                getBlogLists(page,limit){
+                   $.ajax({
+                        url: "http://localhost:3000/getBlogLists",
+                        type: "GET",
+                        data: { page, limit },
+                        success: res => {
+                            console.log(res)
+                            this.blogTotalNum = Math.ceil(res.data.total / limit)
+                            this.page = res.data.page
+                            this.blogLists = res.data.data
+                        },
+                        error: err => {
+                            console.log(err)
+                        }
+                    }) 
+                }
+            },
+        })
+    </script>
+</body>
+</html>
